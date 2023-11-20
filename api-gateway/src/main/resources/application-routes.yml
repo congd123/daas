@@ -1,0 +1,8 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: daas-scylladb
+        uri: localhost:8082/
+        predicates:
+        - Path=/daas/users
