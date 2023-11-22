@@ -1,6 +1,6 @@
-# Data as a Service using Cassandra
+# Data as a Service using ScyllaDB
 
-In today's data-driven world, efficient data management and accessibility are paramount. Data as a Service (DaaS) and the integration of an API Gateway play pivotal roles in enabling seamless data sharing, secure access, and efficient management. We will explore the implementation of DaaS using Cassandra and the advantages of incorporating an API Gateway for managing interactions.
+In today's data-driven world, efficient data management and accessibility are paramount. Data as a Service (DaaS) and the integration of an API Gateway play pivotal roles in enabling seamless data sharing, secure access, and efficient management. We will explore the implementation of DaaS using ScyllaDB and the advantages of incorporating an API Gateway for managing interactions.
 
 DaaS serves as a solution to selectively and securely share data across diverse platforms and systems.
 
@@ -19,12 +19,12 @@ Data in silos can limit its potential value across an organization. However, exp
 - **Developer Experience:** Simplified interactions and reduced complexities.
 - **Compliance and Governance:** Consistent application of regulatory requirements.
 
-## Example using Apache Cassandra
-Using API Gateway for managing the access to Cassandra has advatanges as you could see above.
+## Example using ScyllaDB
+Using API Gateway for managing the access to ScyllaDB has advantages as you can see above.
 
 ### Solution Architecture
 - API Gateway for API management.
-- Cassandra for data storage.
+- ScyllaDB for data storage.
 - RESTful Spring Boot application for API development.
 
 ![diagram](docs/diagram.png)
