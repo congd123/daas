@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/daas")
+@RequestMapping("/daas/api/scylladb")
 public class DaasController {
     @Autowired
     private UserRepository userRepository;

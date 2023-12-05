@@ -15,9 +15,6 @@
     </parent>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <java.version>17</java.version>
         <spring-cassandra.version>3.1.5</spring-cassandra.version>
         <spring-rest.version>3.1.5</spring-rest.version>
         <junit.version>5.10.1</junit.version>

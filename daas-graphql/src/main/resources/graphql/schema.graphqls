@@ -1,0 +1,17 @@
+type Query {
+    deviceById(id: ID): Device
+}
+
+type Device {
+    id: ID
+    name: String
+    location: Location
+}
+
+type Location {
+    id: ID
+    name: String
+    city: String
+    country: String
+    code: Int
+}
