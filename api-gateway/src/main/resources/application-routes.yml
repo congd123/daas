@@ -2,7 +2,19 @@ spring:
   cloud:
     gateway:
       routes:
-      - id: daas-scylladb
-        uri: localhost:8082/
-        predicates:
-        - Path=/daas/users
+        - id: daas-scylladb
+          uri: http://localhost:8082
+          predicates:
+            - Path=/daas/api/scylladb/users/**
+        - id: daas-api-gateway
+          uri: http://localhost:8082
+          predicates:
+            - Path=/daas/api/users/**
+          filters:
+            - SetPath=/daas/api/scylladb/users
+        - id: daas-graphiql
+          uri: http://localhost:8083
+          predicates:
+            - Path=/graphiql/**
+          filters:
+            - RewritePath=/graphiql/(?<segment>.*), /$\{segment}

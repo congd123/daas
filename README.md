@@ -25,11 +25,21 @@ Using API Gateway for managing the access to the databases or APIs has advantage
 
 ![diagram](docs/diagram.png)
 
+### Using Scylladb
+#### Start the Application
+Run the command `make run-scylladb`.
+
+Ensure that your application is running and navigate to the following endpoint:
+- http://localhost:8081/daas/api/scylladb/users
+- or if you are using the api-gateway http://localhost:8081/daas/api/users
 
 ### Using Graphql
 #### Start the Application
+Run the command `make run-graphql`.
+
 Ensure that your application is running and navigate to the following endpoint:
-http://localhost:8080/graphiql?path=/daas/api/graphql
+- http://localhost:8083/graphiql?path=/daas/api/graphql
+- or if you are using the api-gateway http://localhost:8081/graphiql
 
 #### Send a GraphQL Request
 Use the provided GraphQL query to retrieve device details:

@@ -2,3 +2,11 @@ server:
   port: 8081
   application:
       name: gateway-api
+
+logging.level.org.springframework.cloud.gateway: info
+logging.level.org.springframework.http.server.reactive: info
+logging.level.org.springframework.web.reactive: info
+logging.level.org.springframework.boot.autoconfigure.web: info
+logging.level.reactor.netty: info
+logging.level.redisratelimiter: info
+
