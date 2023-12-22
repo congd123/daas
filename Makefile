@@ -2,9 +2,9 @@ clean:
 	mvn clean
 
 run:
-	mvn spring-boot:run -pl api-gateway
-	mvn spring-boot:run -pl daas-graphql
-        mvn spring-boot:run -pl daas-scylladb
+	nohup mvn spring-boot:run -pl api-gateway &
+	nohup mvn spring-boot:run -pl daas-graphql &
+    nohup mvn spring-boot:run -pl daas-scylladb &
 
 run-apigateway:
 	mvn spring-boot:run -pl api-gateway

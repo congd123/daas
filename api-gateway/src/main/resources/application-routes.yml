@@ -12,6 +12,12 @@ spring:
             - Path=/daas/api/users/**
           filters:
             - SetPath=/daas/api/scylladb/users
+        - id: daas-graphql-api-gateway
+          uri: http://localhost:8083
+          predicates:
+            - Path=/daas/graphql/**
+          filters:
+            - SetPath=/daas/api/graphql
         - id: daas-graphiql
           uri: http://localhost:8083
           predicates:
