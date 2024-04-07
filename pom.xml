@@ -30,5 +30,6 @@
         <module>api-gateway</module>
         <module>daas-scylladb</module>
         <module>daas-graphql</module>
+        <module>daas-lakehouse</module>
     </modules>
 </project>

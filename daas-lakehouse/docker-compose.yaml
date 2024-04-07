@@ -1,0 +1,144 @@
+version: "3.8"
+
+services:
+  jobmanager:
+    image: flink:1.18-java11
+    ports:
+      - 8081:8081
+    command: jobmanager
+    volumes:
+      - ./docker/conf/flink:/usr/share/flink/conf
+      - ./docker/conf/flink/flink-conf.yaml:/usr/share/flink/conf/flink-conf.yaml
+      - ./docker/conf/hadoop:/opt/hadoop/conf
+      - ./docker/conf/hive:/opt/hive/conf
+    environment:
+      - COMPONENT=jobmanager
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+      - HIVE_CONF_DIR=/opt/hive/conf
+      - HADOOP_CONF_DIR=/opt/hadoop/conf
+
+  taskmanager:
+    image: flink:1.18-java11
+    depends_on:
+      - jobmanager
+    command: taskmanager
+    volumes:
+      - ./docker/conf/flink:/usr/share/flink/conf
+      - ./docker/conf/flink/flink-conf.yaml:/usr/share/flink/conf/flink-conf.yaml
+      - ./docker/conf/hadoop:/opt/hadoop/conf
+      - ./docker/conf/hive:/opt/hive/conf
+    environment:
+      - COMPONENT=taskmanager
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+      - HIVE_CONF_DIR=/opt/hive/conf
+      - HADOOP_CONF_DIR=/opt/hadoop/conf
+
+  broker:
+    image: confluentinc/cp-kafka:7.3.0
+    hostname: broker
+    container_name: broker
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    volumes:
+      - ./docker/conf/kafka/run_workaround.sh:/tmp/run_workaround.sh
+    command: "bash -c '/tmp/run_workaround.sh && /etc/confluent/docker/run'"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid"
+      # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2024-01-13T07-53-03Z
+    hostname: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+
+  minio-buckets:
+    image: minio/mc:RELEASE.2024-01-13T08-44-48Z
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc config host add myminio http://minio:9000 minio minio123;
+      /usr/bin/mc mb myminio/checkpoints;
+      /usr/bin/mc mb myminio/hive;
+      /usr/bin/mc mb myminio/datastream-devices;
+      exit 0;
+      "
+
+  hive:
+    build:
+      context: docker/conf/hive
+    depends_on:
+      hive-server2:
+        condition: service_healthy
+      minio-buckets:
+        condition: service_started
+    command: >
+      bash -c 'sleep 15 && beeline -u jdbc:hive2://hive-server2:10000'
+
+  hive-server2:
+    build:
+      context: docker/conf/hive
+    ports:
+      - "10000:10000"
+      - "9083:9083"
+    depends_on:
+      - minio-buckets
+      - hive-metastore-maria
+    environment:
+      - DB_DRIVER=mysql
+    command: >
+      bash -c 'sleep 15 && /opt/hive/bin/schematool -dbType mysql -initSchema
+      && hive --service hiveserver2 --hiveconf hive.server2.thrift.port=10000 --hiveconf hive.root.logger=INFO,console & hive --service metastore'
+    healthcheck:
+      interval: 20s
+      retries: 15
+      test: [ "CMD", "hive"]
+
+  hive-metastore-maria:
+    image: mariadb:10.5
+    environment:
+      - MYSQL_ROOT_PASSWORD=mypass
+    ports:
+      - "3306:3306"
+
+  trino:
+    image: trinodb/trino:442
+    container_name: trino
+    depends_on:
+      - minio
+      - hive-server2
+      - hive-metastore-maria
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docker/conf/trino/catalog:/etc/trino/catalog
+      - ./docker/conf/trino/etc:/usr/lib/trino/etc:ro
